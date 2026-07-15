@@ -82,6 +82,14 @@ class TasksController < ActionController::API
             return render json: { message: "Task not exist" }, status: :not_found
         end
 
+        task_status = Task.statuses[task.status]  
+        request_status = data_task[:status].to_i
+        isValidStatus = Task.check_status(task_status, request_status)
+
+        if !isValidStatus
+            return render json: { message: "Status is not valid" }, status: 422
+        end
+
         task.update(data_task)
         render json: { message: "Update success" }, status: :ok
     end
@@ -106,8 +114,3 @@ class TasksController < ActionController::API
         render json: { message: "Task is destroyed", task: task }, status: :ok
     end
 end
-
-
-# 2. Добавить проверку статуса при изменении данных таски!
-# 3. САМОЕ ГЛАВНОЕ! ЕЩЕ РАЗ ПОДУМАТЬ НАД ТЕМ, КАК МЫ ПОЛУЧАЕМ ТАСКИ! КАК ОНИ СВЯЗАНЫ С ПРОЕКТАМИ! ПРАВИЛЬНО ОРГАНИЗОВАТЬ ПЕРВИЧНЫЙ КЛЮЧИ ТАСКИ!
-# (ВОЗМОЖНО НАД ТЕМ ЖЕ СТОИТ ПОДУМАТЬ И ПРИ РЕАЛИЗАЦИИ ПРОЕКТОВ)
