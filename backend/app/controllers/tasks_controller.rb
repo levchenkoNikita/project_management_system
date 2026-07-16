@@ -29,13 +29,13 @@ class TasksController < ActionController::API
         data_task = params.require(:task).permit(:status, :title, :description)
 
         if data_task[:status] < 0 || data_task[:status] > 4
-            return render json: { message: "Created error" }, status: 422
+            return render json: { message: "Created error" }, status: :unprocessable_entity
         end    
 
         task = Task.create(data_task.merge(project_id: project_id))
 
         if !task.persisted?
-            return render json: { message: "Created error" }, status: 422
+            return render json: { message: "Created error" }, status: :unprocessable_entity
         end
 
         render json: { message: "Created successful", task: task }, status: :created
@@ -73,7 +73,7 @@ class TasksController < ActionController::API
         data_task = params.require(:task).permit(:status, :title, :description)
 
         if data_task[:status] < 0 || data_task[:status] > 4
-            return render json: { message: "Created error" }, status: 422
+            return render json: { message: "Created error" }, status: :unprocessable_entity
         end   
 
         task = Task.find_by(id: task_id, project_id: project_id)
@@ -87,7 +87,7 @@ class TasksController < ActionController::API
         isValidStatus = Task.check_status(task_status, request_status)
 
         if !isValidStatus
-            return render json: { message: "Status is not valid" }, status: 422
+            return render json: { message: "Status is not valid" }, status: :unprocessable_entity
         end
 
         task.update(data_task)
