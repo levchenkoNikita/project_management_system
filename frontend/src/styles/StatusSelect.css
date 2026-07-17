@@ -1,0 +1,126 @@
+.status-select {
+    position: relative;
+    width: 100%;
+}
+
+.status-select--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.status-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 14px;
+    text-align: left;
+    color: var(--color-main2);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--color-accent);
+    border-radius: 10px;
+    cursor: pointer;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.status-select__trigger:hover {
+    border-color: rgba(58, 230, 1, 0.5);
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.status-select__trigger:focus-visible,
+.status-select--open .status-select__trigger {
+    border-color: var(--color-accent2);
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow:
+        0 0 0 3px rgba(58, 230, 1, 0.18),
+        0 0 16px rgba(58, 230, 1, 0.12);
+}
+
+.status-select__value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.status-select__chevron {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--color-accent2);
+    border-bottom: 2px solid var(--color-accent2);
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+.status-select--open .status-select__chevron {
+    transform: rotate(225deg) translateY(-1px);
+}
+
+.status-select__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: #1c1c1e;
+    border: 1px solid rgba(58, 230, 1, 0.35);
+    border-radius: 12px;
+    box-shadow:
+        0 0 0 1px rgba(58, 230, 1, 0.06),
+        0 12px 28px rgba(0, 0, 0, 0.45),
+        0 0 24px rgba(58, 230, 1, 0.12);
+    animation: status-select-in 0.16s ease;
+}
+
+.status-select__option {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.82);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.status-select__option:hover,
+.status-select__option:focus-visible {
+    color: var(--color-main2);
+    background: rgba(58, 230, 1, 0.12);
+    border-color: rgba(58, 230, 1, 0.25);
+    outline: none;
+}
+
+.status-select__option--selected {
+    color: var(--color-accent2);
+    background: rgba(58, 230, 1, 0.16);
+    border-color: rgba(58, 230, 1, 0.35);
+    font-weight: 600;
+}
+
+@keyframes status-select-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

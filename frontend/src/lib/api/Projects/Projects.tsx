@@ -1,39 +1,93 @@
-import config from '@/lib/utils/config'
+import config from "@/lib/utils/config";
+import { getAuthToken } from "@/lib/utils/auth";
+import type { Project } from "@/lib/types/models";
 
-export async function getProjects() {
-    const response = await fetch(`${config.api}/projects`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer fff'
-        }
-    });
-
-    if(!response.ok) throw new Error('Ошибка запроса. Неверный запрос!')
-    if(response.status >= 300 && response.status <= 400) throw new Error('Ошибка запроса -> 3xx')
-    if(response.status >= 400 && response.status <= 500) throw new Error('Ошибка запроса -> 4xx')
-    if(response.status >= 500 && response.status <= 600) throw new Error('Ошибка запроса -> 5xx')
-
-    const data = await response.json();
-    return data;
+function authHeaders(): HeadersInit {
+    const token = getAuthToken();
+    return {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
 }
 
-export async function postProjects(request_body) {
-    const json = JSON.stringify(request_body);
+async function readErrorMessage(
+    response: Response,
+    fallback: string
+): Promise<string> {
+    try {
+        const data = await response.json();
+        if (typeof data.message === "string") return data.message;
+        if (Array.isArray(data.message)) return data.message.join(". ");
+    } catch {
+        /* ignore */
+    }
+    return fallback;
+}
+
+export async function getProjects(): Promise<Project[]> {
     const response = await fetch(`${config.api}/projects`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer fff'
-        },
-        body: json
+        method: "GET",
+        headers: authHeaders(),
     });
 
-    if(!response.ok) throw new Error('Ошибка запроса. Неверный запрос!')
-    if(response.status >= 300 && response.status <= 400) throw new Error('Ошибка запроса -> 3xx')
-    if(response.status >= 400 && response.status <= 500) throw new Error('Ошибка запроса -> 4xx')
-    if(response.status >= 500 && response.status <= 600) throw new Error('Ошибка запроса -> 5xx')
-        
+    if (!response.ok) {
+        throw new Error(
+            await readErrorMessage(response, "Не удалось загрузить проекты")
+        );
+    }
+
     const data = await response.json();
-    return data;
+    return Array.isArray(data.projects) ? data.projects : [];
+}
+
+export async function createProject(title: string): Promise<Project> {
+    const response = await fetch(`${config.api}/projects`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ title }),
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            await readErrorMessage(response, "Не удалось создать проект")
+        );
+    }
+
+    const data = await response.json();
+    if (!data.project) {
+        throw new Error("Сервер не вернул созданный проект");
+    }
+
+    return data.project as Project;
+}
+
+export async function updateProject(
+    projectId: string | number,
+    newTitle: string
+): Promise<void> {
+    const response = await fetch(`${config.api}/projects/${projectId}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ new_title: newTitle }),
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            await readErrorMessage(response, "Не удалось обновить проект")
+        );
+    }
+}
+
+export async function deleteProject(projectId: string | number): Promise<void> {
+    const response = await fetch(`${config.api}/projects/${projectId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            await readErrorMessage(response, "Не удалось удалить проект")
+        );
+    }
 }

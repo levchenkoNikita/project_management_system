@@ -29,10 +29,15 @@
 }
 
 @layer base {
+    html {
+        scrollbar-gutter: auto;
+    }
+
     body {
         background: var(--color-main);
         color: var(--color-main2);
         font-family: Arial, Helvetica, sans-serif;
+        overflow-x: hidden;
     }
 }
 

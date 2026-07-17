@@ -10,7 +10,23 @@ class UsersController < ActionController::API
     end
 
     def show
-        puts "Controller show(user) is work!"
+        token = request.headers['Authorization']&.split(' ')&.last
+        user_id = User.user_exist(token)
+
+        if user_id.blank?
+            return render json: { message: "Authorized error" }, status: :unauthorized
+        end
+
+        user = User.find_by(id: user_id)
+
+        if user.blank?
+            return render json: { message: "User not exist" }, status: :not_found
+        end
+
+        render json: {
+            message: "Request success",
+            user: user.as_json(only: [:id, :name, :email, :created_at, :updated_at])
+        }, status: :ok
     end
 
     def update
