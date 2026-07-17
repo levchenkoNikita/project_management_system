@@ -20,7 +20,7 @@ class Task < ApplicationRecord
     STATUS_IN_PROGRESS => [ STATUS_TO_DO, STATUS_IN_TESTING ].freeze,
     STATUS_IN_TESTING => [ STATUS_REJECTED, STATUS_DONE ].freeze,
     STATUS_REJECTED => [ STATUS_IN_PROGRESS ].freeze,
-    STATUS_DONE => [ STATUS_TO_DO ].freeze
+    STATUS_DONE => [].freeze
   }.freeze
 
   belongs_to :project
@@ -38,6 +38,7 @@ class Task < ApplicationRecord
     current = current_status.to_s
     requested = requested_status.to_s
     return false unless valid_status?(current) && valid_status?(requested)
+    return false if current == requested
 
     ALLOWED_TRANSITIONS.fetch(current, []).include?(requested)
   end

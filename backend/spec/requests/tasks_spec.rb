@@ -82,6 +82,23 @@ RSpec.describe "Tasks", type: :request do
       expect(task.title).to eq("Updated")
     end
 
+    it "updates title without changing status" do
+      patch "/projects/#{project.id}/tasks/#{task.id}",
+            params: {
+              task: {
+                title: "Same status update",
+                description: "Desc",
+                status: Task::STATUS_TO_DO
+              }
+            },
+            headers: headers,
+            as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(task.reload.status).to eq("to_do")
+      expect(task.title).to eq("Same status update")
+    end
+
     it "rejects invalid status transition" do
       patch "/projects/#{project.id}/tasks/#{task.id}",
             params: {

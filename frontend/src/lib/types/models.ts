@@ -92,7 +92,7 @@ export function getValidNextStatuses(
         case TASK_STATUS_REJECTED:
             return [TASK_STATUS_IN_PROGRESS];
         case TASK_STATUS_DONE:
-            return [TASK_STATUS_TO_DO];
+            return [];
         default:
             return [...TASK_STATUS_ORDER];
     }

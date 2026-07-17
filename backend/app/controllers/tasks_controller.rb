@@ -55,11 +55,14 @@ class TasksController < ApiController
       return render_message("api.errors.task_not_found", status: :not_found)
     end
 
-    unless Task.check_status(task.status, status)
+    if status != task.status.to_s && !Task.check_status(task.status, status)
       return render_message("api.errors.invalid_status", status: :unprocessable_entity)
     end
 
-    if task.update(data_task.merge(status: status))
+    attrs = data_task.to_h
+    attrs.delete("status") if status == task.status.to_s
+
+    if task.update(attrs)
       return render_message("api.messages.task_updated", status: :ok)
     end
 

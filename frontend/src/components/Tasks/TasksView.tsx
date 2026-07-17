@@ -75,6 +75,17 @@ export default function TasksView({ projectId }: TasksViewProps) {
         return getValidNextStatuses(selectedTask.status);
     }, [selectedTask]);
 
+    const hasDetailChanges = useMemo(() => {
+        if (!selectedTask || !editDraft) return false;
+
+        return (
+            editDraft.title.trim() !== selectedTask.title.trim() ||
+            editDraft.description.trim() !==
+                (selectedTask.description ?? "").trim() ||
+            editDraft.status !== normalizeTaskStatus(selectedTask.status)
+        );
+    }, [selectedTask, editDraft]);
+
     const boardRows = useMemo(() => {
         return TASK_STATUS_ORDER.map((status) => ({
             status,
@@ -150,11 +161,10 @@ export default function TasksView({ projectId }: TasksViewProps) {
         try {
             const task = await getTask(projectId, taskId);
             setSelectedTask(task);
-            const next = getValidNextStatuses(task.status);
             setEditDraft({
                 title: task.title,
                 description: task.description ?? "",
-                status: next[0] ?? normalizeTaskStatus(task.status),
+                status: normalizeTaskStatus(task.status),
             });
         } catch (err) {
             setDetailError(
@@ -196,7 +206,9 @@ export default function TasksView({ projectId }: TasksViewProps) {
 
     async function handleSaveDetail(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        if (!selectedTask || !editDraft || savingDetail) return;
+        if (!selectedTask || !editDraft || savingDetail || !hasDetailChanges) {
+            return;
+        }
 
         const title = editDraft.title.trim();
         if (!title) {
@@ -220,11 +232,10 @@ export default function TasksView({ projectId }: TasksViewProps) {
                     item.id === refreshed.id ? refreshed : item
                 )
             );
-            const next = getValidNextStatuses(refreshed.status);
             setEditDraft({
                 title: refreshed.title,
                 description: refreshed.description ?? "",
-                status: next[0] ?? normalizeTaskStatus(refreshed.status),
+                status: normalizeTaskStatus(refreshed.status),
             });
         } catch (err) {
             setDetailError(
@@ -650,13 +661,15 @@ export default function TasksView({ projectId }: TasksViewProps) {
                                                 }
                                                 disabled={
                                                     savingDetail ||
-                                                    deletingDetail
+                                                    deletingDetail ||
+                                                    nextStatuses.length === 0
                                                 }
                                                 aria-label="Новый статус задачи"
                                             />
                                             <span className="task-overlay__hint">
-                                                Бэкенд принимает только допустимый
-                                                следующий статус по процессу.
+                                                {nextStatuses.length === 0
+                                                    ? "Статус «Готово» конечный — дальше перейти нельзя."
+                                                    : "Бэкенд принимает только допустимый следующий статус по процессу."}
                                             </span>
                                         </div>
                                     </div>
@@ -682,7 +695,8 @@ export default function TasksView({ projectId }: TasksViewProps) {
                                             disabled={
                                                 savingDetail ||
                                                 deletingDetail ||
-                                                !editDraft.title.trim()
+                                                !editDraft.title.trim() ||
+                                                !hasDetailChanges
                                             }
                                         >
                                             {savingDetail

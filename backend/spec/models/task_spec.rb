@@ -37,11 +37,13 @@ RSpec.describe Task, type: :model do
       expect(described_class.check_status("in_progress", "in_testing")).to be(true)
       expect(described_class.check_status("in_testing", "done")).to be(true)
       expect(described_class.check_status("rejected", "in_progress")).to be(true)
-      expect(described_class.check_status("done", "to_do")).to be(true)
     end
 
     it "rejects invalid transitions" do
+      expect(described_class.check_status("to_do", "to_do")).to be(false)
+      expect(described_class.check_status("done", "done")).to be(false)
       expect(described_class.check_status("to_do", "done")).to be(false)
+      expect(described_class.check_status("done", "to_do")).to be(false)
       expect(described_class.check_status("done", "in_progress")).to be(false)
       expect(described_class.check_status("to_do", "unknown")).to be(false)
     end
