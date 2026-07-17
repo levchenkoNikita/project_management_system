@@ -15,7 +15,9 @@ import {
     getValidNextStatuses,
     normalizeTaskStatus,
     TASK_STATUS_ORDER,
+    TASK_STATUS_TO_DO,
     type Task,
+    type TaskStatus,
 } from "@/lib/types/models";
 import { PROJECTS_ROUTE } from "@/lib/utils/consts";
 import { getProjectBackground } from "@/lib/utils/projectBackground";
@@ -31,16 +33,16 @@ type TasksViewProps = {
 type CreateDraft = {
     title: string;
     description: string;
-    status: number;
+    status: TaskStatus;
 };
 
 type EditDraft = {
     title: string;
     description: string;
-    status: number;
+    status: TaskStatus;
 };
 
-const CREATE_STATUS_OPTIONS = [0, 1, 2, 3, 4];
+const CREATE_STATUS_OPTIONS: TaskStatus[] = [...TASK_STATUS_ORDER];
 
 type ViewMode = "list" | "board";
 
@@ -55,7 +57,7 @@ export default function TasksView({ projectId }: TasksViewProps) {
     const [createDraft, setCreateDraft] = useState<CreateDraft>({
         title: "",
         description: "",
-        status: 0,
+        status: TASK_STATUS_TO_DO,
     });
 
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
@@ -180,7 +182,7 @@ export default function TasksView({ projectId }: TasksViewProps) {
             });
             setTasks((prev) => [task, ...prev]);
             setShowCreateModal(false);
-            setCreateDraft({ title: "", description: "", status: 0 });
+            setCreateDraft({ title: "", description: "", status: TASK_STATUS_TO_DO });
         } catch (err) {
             setError(
                 err instanceof Error

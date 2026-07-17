@@ -1,50 +1,43 @@
 class User < ApplicationRecord
-    has_many :projects, dependent: :destroy
+  NAME_MIN_LENGTH = 6
+  NAME_MAX_LENGTH = 20
+  PASSWORD_MAX_LENGTH = 72
+  PASSWORD_FORMAT = /\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\/\-]).{8,}\z/
 
-    has_secure_password
-    validates :name, presence: true, length: { minimum: 6, maximum: 20 }
-    validates :password, presence: true, length: { maximum: 72 }, format: { 
-        with: /\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\/\-]).{8,}\z/, 
-        message: ": должен содержать минимум одну заглавную, одну строчную букву, цифру и спецсимвол (!@#$%^&*()_+{}[]:;<>,.?~/-)"
-    }
-    validates :email, presence: true, uniqueness: true, format: { 
-        with: URI::MailTo::EMAIL_REGEXP, 
-        message: ": некорректный email"
-    }
+  has_many :projects, dependent: :destroy
 
-    SECRET_KEY = 'Hello, World!'
+  has_secure_password
+  validates :name, presence: true, length: { minimum: NAME_MIN_LENGTH, maximum: NAME_MAX_LENGTH }
+  validates :password, presence: true, length: { maximum: PASSWORD_MAX_LENGTH }, format: {
+    with: PASSWORD_FORMAT
+  }, if: -> { new_record? || !password.nil? }
+  validates :email, presence: true, uniqueness: true, format: {
+    with: URI::MailTo::EMAIL_REGEXP
+  }
 
-    def self.generate_token(user_id)
-        payload = { user_id: user_id, exp: 1.hours.from_now.to_i }
-        JWT.encode(payload, SECRET_KEY, 'HS256')
-    end
+  SECRET_KEY = "Hello, World!"
 
-    def self.decode_token(token)
-        begin
-            JWT.decode(token, SECRET_KEY, true, algorithm: 'HS256')[0]
-        rescue JWT::DecodeError
-            nil
-        end
-    end
+  def self.generate_token(user_id)
+    payload = { user_id: user_id, exp: 1.hours.from_now.to_i }
+    JWT.encode(payload, SECRET_KEY, "HS256")
+  end
 
-    def self.user_exist(token)
-        if token.blank?
-            return nil
-        end
+  def self.decode_token(token)
+    JWT.decode(token, SECRET_KEY, true, algorithm: "HS256")[0]
+  rescue JWT::DecodeError
+    nil
+  end
 
-        decoded = self.decode_token(token)
+  def self.user_exist(token)
+    return nil if token.blank?
 
-        if decoded.blank?
-            return nil
-        end
+    decoded = decode_token(token)
+    return nil if decoded.blank?
 
-        user_id = decoded['user_id']
-        user = User.find_by(id: user_id)
+    user_id = decoded["user_id"]
+    user = find_by(id: user_id)
+    return nil if user.blank?
 
-        if user.blank?
-            return nil
-        end
-
-        user_id
-    end
+    user_id
+  end
 end

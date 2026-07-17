@@ -1,0 +1,74 @@
+ru:
+  hello: "Привет, мир"
+
+  api:
+    errors:
+      unauthorized: "Ошибка авторизации"
+      not_found: "Ресурс не найден"
+      bad_request: "Некорректный запрос"
+      unprocessable_entity: "Невозможно обработать запрос"
+      parameter_missing: "Отсутствует обязательный параметр"
+      record_invalid: "Ошибка валидации"
+      internal: "Внутренняя ошибка сервера"
+      invalid_status: "Недопустимый статус"
+      user_not_found: "Пользователь не найден"
+      project_not_found: "Проект не найден"
+      task_not_found: "Задача не найдена"
+      tasks_empty: "Задачи отсутствуют"
+      create_failed: "Ошибка создания"
+      update_failed: "Ошибка обновления"
+      login_failed: "Ошибка входа"
+    messages:
+      request_success: "Запрос выполнен успешно"
+      login_successful: "Вход выполнен успешно"
+      user_created: "Пользователь создан!"
+      project_created: "Проект создан!"
+      project_updated: "Обновление выполнено успешно"
+      project_destroyed: "Проект удалён"
+      task_created: "Задача создана"
+      task_updated: "Задача обновлена"
+      task_destroyed: "Задача удалена"
+      task_shown: "Запрос выполнен"
+
+  activerecord:
+    attributes:
+      user:
+        name: "Имя"
+        email: "Email"
+        password: "Пароль"
+        password_confirmation: "Подтверждение пароля"
+      project:
+        title: "Название"
+      task:
+        title: "Название"
+        description: "Описание"
+        status: "Статус"
+    errors:
+      models:
+        user:
+          attributes:
+            name:
+              blank: "не может быть пустым"
+              too_short: "слишком короткое (минимум %{count} символов)"
+              too_long: "слишком длинное (максимум %{count} символов)"
+            email:
+              blank: "не может быть пустым"
+              taken: "уже занят"
+              invalid: "некорректный email"
+            password:
+              blank: "не может быть пустым"
+              too_long: "слишком длинный (максимум %{count} символов)"
+              invalid: "должен содержать минимум одну заглавную, одну строчную букву, цифру и спецсимвол"
+        project:
+          attributes:
+            title:
+              blank: "не может быть пустым"
+              too_long: "слишком длинное (максимум %{count} символов)"
+        task:
+          attributes:
+            title:
+              blank: "не может быть пустым"
+              too_long: "слишком длинное (максимум %{count} символов)"
+            status:
+              blank: "не может быть пустым"
+              inclusion: "не входит в список допустимых значений"

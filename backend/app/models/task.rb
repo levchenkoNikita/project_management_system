@@ -1,30 +1,44 @@
 class Task < ApplicationRecord
+  TITLE_MAX_LENGTH = 100
+
+  STATUS_TO_DO = "to_do"
+  STATUS_IN_PROGRESS = "in_progress"
+  STATUS_IN_TESTING = "in_testing"
+  STATUS_REJECTED = "rejected"
+  STATUS_DONE = "done"
+
+  STATUSES = {
+    to_do: STATUS_TO_DO,
+    in_progress: STATUS_IN_PROGRESS,
+    in_testing: STATUS_IN_TESTING,
+    rejected: STATUS_REJECTED,
+    done: STATUS_DONE
+  }.freeze
+
+  ALLOWED_TRANSITIONS = {
+    STATUS_TO_DO => [ STATUS_IN_PROGRESS ].freeze,
+    STATUS_IN_PROGRESS => [ STATUS_TO_DO, STATUS_IN_TESTING ].freeze,
+    STATUS_IN_TESTING => [ STATUS_REJECTED, STATUS_DONE ].freeze,
+    STATUS_REJECTED => [ STATUS_IN_PROGRESS ].freeze,
+    STATUS_DONE => [ STATUS_TO_DO ].freeze
+  }.freeze
+
   belongs_to :project
 
-  enum :status, {
-    to_do: 0,
-    in_progress: 1,
-    in_testing: 2,
-    rejected: 3,
-    done: 4
-  }
+  enum :status, STATUSES
 
   validates :status, presence: true
-  validates :title, presence: true,  length: { maximum: 100 }
+  validates :title, presence: true, length: { maximum: TITLE_MAX_LENGTH }
 
-  def self.check_status(task_status, request_status)
-    if task_status == 0 && request_status != 1
-        return false
-    elsif task_status == 1 && (request_status != 2 && request_status != 0)
-        return false
-    elsif task_status == 2 && (request_status != 3 && request_status != 4)
-        return false
-    elsif task_status == 3 && request_status != 1
-        return false
-    elsif task_status == 4 && !request_status.blank?
-        return false
-    else
-        true
-    end
+  def self.valid_status?(status)
+    STATUSES.value?(status.to_s)
+  end
+
+  def self.check_status(current_status, requested_status)
+    current = current_status.to_s
+    requested = requested_status.to_s
+    return false unless valid_status?(current) && valid_status?(requested)
+
+    ALLOWED_TRANSITIONS.fetch(current, []).include?(requested)
   end
 end

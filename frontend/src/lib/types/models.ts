@@ -19,8 +19,7 @@ export type TaskStatus =
     | "in_progress"
     | "in_testing"
     | "rejected"
-    | "done"
-    | number;
+    | "done";
 
 export type Task = {
     id: number;
@@ -32,62 +31,69 @@ export type Task = {
     updated_at?: string;
 };
 
-export const TASK_STATUS_LABELS: Record<string, string> = {
+export const TASK_STATUS_TO_DO: TaskStatus = "to_do";
+export const TASK_STATUS_IN_PROGRESS: TaskStatus = "in_progress";
+export const TASK_STATUS_IN_TESTING: TaskStatus = "in_testing";
+export const TASK_STATUS_REJECTED: TaskStatus = "rejected";
+export const TASK_STATUS_DONE: TaskStatus = "done";
+
+export const TASK_STATUS_ORDER: TaskStatus[] = [
+    TASK_STATUS_TO_DO,
+    TASK_STATUS_IN_PROGRESS,
+    TASK_STATUS_IN_TESTING,
+    TASK_STATUS_REJECTED,
+    TASK_STATUS_DONE,
+];
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
     to_do: "К выполнению",
     in_progress: "В работе",
     in_testing: "На тестировании",
     rejected: "Отклонена",
     done: "Готово",
-    "0": "К выполнению",
-    "1": "В работе",
-    "2": "На тестировании",
-    "3": "Отклонена",
-    "4": "Готово",
 };
 
-const STATUS_NAME_TO_CODE: Record<string, number> = {
-    to_do: 0,
-    in_progress: 1,
-    in_testing: 2,
-    rejected: 3,
-    done: 4,
+const STATUS_ALIASES: Record<string, TaskStatus> = {
+    to_do: "to_do",
+    in_progress: "in_progress",
+    in_testing: "in_testing",
+    rejected: "rejected",
+    done: "done",
+    "0": "to_do",
+    "1": "in_progress",
+    "2": "in_testing",
+    "3": "rejected",
+    "4": "done",
 };
 
-export const TASK_STATUS_ORDER = [0, 1, 2, 3, 4] as const;
-
-export function getTaskStatusLabel(status: TaskStatus): string {
-    return TASK_STATUS_LABELS[String(status)] ?? String(status);
+export function normalizeTaskStatus(status: TaskStatus | string | number): TaskStatus {
+    const mapped = STATUS_ALIASES[String(status)];
+    return mapped ?? TASK_STATUS_TO_DO;
 }
 
-export function normalizeTaskStatus(status: TaskStatus): number {
-    if (typeof status === "number" && !Number.isNaN(status)) {
-        return status;
-    }
-
-    const asName = STATUS_NAME_TO_CODE[String(status)];
-    if (asName !== undefined) return asName;
-
-    const asNumber = Number(status);
-    return Number.isNaN(asNumber) ? 0 : asNumber;
+export function getTaskStatusLabel(status: TaskStatus | string | number): string {
+    const normalized = normalizeTaskStatus(status);
+    return TASK_STATUS_LABELS[normalized] ?? String(status);
 }
 
 /** Valid next statuses according to backend Task.check_status */
-export function getValidNextStatuses(current: TaskStatus): number[] {
+export function getValidNextStatuses(
+    current: TaskStatus | string | number
+): TaskStatus[] {
     const code = normalizeTaskStatus(current);
 
     switch (code) {
-        case 0:
-            return [1];
-        case 1:
-            return [0, 2];
-        case 2:
-            return [3, 4];
-        case 3:
-            return [1];
-        case 4:
-            // Backend treats 0 as blank and allows the transition from done
-            return [0];
+        case TASK_STATUS_TO_DO:
+            return [TASK_STATUS_IN_PROGRESS];
+        case TASK_STATUS_IN_PROGRESS:
+            return [TASK_STATUS_TO_DO, TASK_STATUS_IN_TESTING];
+        case TASK_STATUS_IN_TESTING:
+            return [TASK_STATUS_REJECTED, TASK_STATUS_DONE];
+        case TASK_STATUS_REJECTED:
+            return [TASK_STATUS_IN_PROGRESS];
+        case TASK_STATUS_DONE:
+            return [TASK_STATUS_TO_DO];
         default:
-            return [0, 1, 2, 3, 4];
+            return [...TASK_STATUS_ORDER];
     }
 }

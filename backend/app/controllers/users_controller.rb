@@ -1,39 +1,36 @@
-class UsersController < ActionController::API
-    def registration
-        user_data = params.require(:user).permit(:name, :email, :password, :password_confirmation)
-        user = User.new(user_data)
-        if user.save 
-            render json: { message: "User created!", user: user}, status: :created
-        else
-            render json: { message: user.errors.full_messages }, status: :unprocessable_entity
-        end
+class UsersController < ApiController
+  def registration
+    user_data = params.require(:user).permit(:name, :email, :password, :password_confirmation)
+    user = User.new(user_data)
+
+    if user.save
+      return render_message(
+        "api.messages.user_created",
+        status: :created,
+        user: user.as_json(only: [ :id, :name, :email, :created_at, :updated_at ])
+      )
     end
 
-    def show
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+    render json: { message: user.errors.full_messages }, status: :unprocessable_entity
+  end
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
+  def show
+    user_id = current_user_id!
+    user = User.find_by(id: user_id)
+    raise ActiveRecord::RecordNotFound if user.blank?
 
-        user = User.find_by(id: user_id)
+    render_message(
+      "api.messages.request_success",
+      status: :ok,
+      user: user.as_json(only: [ :id, :name, :email, :created_at, :updated_at ])
+    )
+  end
 
-        if user.blank?
-            return render json: { message: "User not exist" }, status: :not_found
-        end
+  def update
+    render_message("api.messages.request_success", status: :ok)
+  end
 
-        render json: {
-            message: "Request success",
-            user: user.as_json(only: [:id, :name, :email, :created_at, :updated_at])
-        }, status: :ok
-    end
-
-    def update
-        puts "Controller update(user) is work!"
-    end
-
-    def destroy
-        puts "Controller destroy(user) is work!"
-    end
+  def destroy
+    render_message("api.messages.request_success", status: :ok)
+  end
 end

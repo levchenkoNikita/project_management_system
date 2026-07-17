@@ -3,7 +3,7 @@ import { getAuthToken } from "@/lib/utils/auth";
 import type { Task } from "@/lib/types/models";
 
 export type TaskPayload = {
-    status: number;
+    status: string;
     title: string;
     description: string;
 };

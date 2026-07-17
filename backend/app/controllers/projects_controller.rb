@@ -1,69 +1,45 @@
-class ProjectsController < ActionController::API
-    def index
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+class ProjectsController < ApiController
+  def index
+    user_id = current_user_id!
+    projects = Project.where(user_id: user_id)
+    render_message("api.messages.request_success", status: :ok, projects: projects)
+  end
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
+  def create
+    user_id = current_user_id!
+    project = Project.new(title: params[:title], user_id: user_id)
 
-        projects = Project.where(user_id: user_id)
-        render json: { message: "Request success", projects: projects }, status: :ok
+    if project.save
+      return render_message("api.messages.project_created", status: :created, project: project)
     end
 
-    def create
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+    render_message("api.errors.create_failed", status: :bad_request)
+  end
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
+  def update
+    user_id = current_user_id!
+    project = Project.find_by(id: params[:id], user_id: user_id)
 
-        project = Project.new(title: params[:title], user_id: user_id)
-
-        if project.save
-            return render json: { message: "Project is created!", project: project }, status: :created
-        end
-
-        render json: { message: "Created error!" }, status: :bad_request
+    if project.blank?
+      return render_message("api.errors.project_not_found", status: :not_found)
     end
 
-    def update
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
-
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
-
-        project_id = params[:id]
-        new_title = params[:new_title]
-        project = Project.find_by(id: project_id, user_id: user_id)
-
-        if !project
-            return render json: { message: "Update is error" }, status: :not_found
-        end
-
-        project.update(title: new_title)
-        render json: { message: "Update is successful" }, status: :ok
+    if project.update(title: params[:new_title])
+      return render_message("api.messages.project_updated", status: :ok)
     end
 
-    def destroy
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+    render_message("api.errors.update_failed", status: :unprocessable_entity)
+  end
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
+  def destroy
+    user_id = current_user_id!
+    project = Project.find_by(id: params[:id], user_id: user_id)
 
-        project_id = params[:id]
-        project = Project.find_by(id: project_id, user_id: user_id)
-
-        if !project
-            return render json: { message: "Project not exist" }, status: :not_found
-        end
-
-        project.destroy
-        render json: { message: "Project is destroyed", project: project }, status: :ok
+    if project.blank?
+      return render_message("api.errors.project_not_found", status: :not_found)
     end
+
+    project.destroy!
+    render_message("api.messages.project_destroyed", status: :ok, project: project)
+  end
 end

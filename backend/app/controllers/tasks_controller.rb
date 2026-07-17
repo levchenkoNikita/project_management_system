@@ -1,116 +1,91 @@
-class TasksController < ActionController::API
-    def index
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+class TasksController < ApiController
+  def index
+    return unless ensure_project_access!
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
-
-        project_id = params[:project_id]
-        tasks = Task.where(project_id: project_id)
-
-        if tasks.blank?
-            return render json: { message: "Task empty" }, status: :bad_request
-        end
-
-        render json: { message: "Request success", tasks: tasks }, status: :ok
+    tasks = Task.where(project_id: params[:project_id])
+    if tasks.blank?
+      return render_message("api.errors.tasks_empty", status: :bad_request)
     end
 
-    def create
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+    render_message("api.messages.request_success", status: :ok, tasks: tasks)
+  end
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
+  def create
+    return unless ensure_project_access!
 
-        project_id = params[:project_id]
-        data_task = params.require(:task).permit(:status, :title, :description)
+    data_task = params.require(:task).permit(:status, :title, :description)
+    status = data_task[:status].to_s
 
-        if data_task[:status] < 0 || data_task[:status] > 4
-            return render json: { message: "Created error" }, status: :unprocessable_entity
-        end    
-
-        task = Task.create(data_task.merge(project_id: project_id))
-
-        if !task.persisted?
-            return render json: { message: "Created error" }, status: :unprocessable_entity
-        end
-
-        render json: { message: "Created successful", task: task }, status: :created
+    unless Task.valid_status?(status)
+      return render_message("api.errors.create_failed", status: :unprocessable_entity)
     end
 
-    def show
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+    task = Task.create(data_task.merge(project_id: params[:project_id], status: status))
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
-
-        project_id = params[:project_id]
-        task_id = params[:id]
-        task = Task.find_by(id: task_id, project_id: project_id)
-        
-        if task.blank?
-            return render json: { message: "task not exist" }, status: :not_found
-        end
-
-        render json: { message: "Request is done", task: task }, status: :ok
+    if task.persisted?
+      return render_message("api.messages.task_created", status: :created, task: task)
     end
 
-    def update
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+    render_message("api.errors.create_failed", status: :unprocessable_entity)
+  end
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
+  def show
+    return unless ensure_project_access!
 
-        project_id = params[:project_id]
-        task_id = params[:id]
-        data_task = params.require(:task).permit(:status, :title, :description)
-
-        if data_task[:status] < 0 || data_task[:status] > 4
-            return render json: { message: "Created error" }, status: :unprocessable_entity
-        end   
-
-        task = Task.find_by(id: task_id, project_id: project_id)
-
-        if task.blank?
-            return render json: { message: "Task not exist" }, status: :not_found
-        end
-
-        task_status = Task.statuses[task.status]  
-        request_status = data_task[:status].to_i
-        isValidStatus = Task.check_status(task_status, request_status)
-
-        if !isValidStatus
-            return render json: { message: "Status is not valid" }, status: :unprocessable_entity
-        end
-
-        task.update(data_task)
-        render json: { message: "Update success" }, status: :ok
+    task = Task.find_by(id: params[:id], project_id: params[:project_id])
+    if task.blank?
+      return render_message("api.errors.task_not_found", status: :not_found)
     end
 
-    def destroy
-        token = request.headers['Authorization']&.split(' ')&.last
-        user_id = User.user_exist(token)
+    render_message("api.messages.task_shown", status: :ok, task: task)
+  end
 
-        if user_id.blank?
-            return render json: { message: "Authorized error" }, status: :unauthorized
-        end
+  def update
+    return unless ensure_project_access!
 
-        project_id = params[:project_id]
-        task_id = params[:id]
-        task = Task.find_by(id: task_id, project_id: project_id)
+    data_task = params.require(:task).permit(:status, :title, :description)
+    status = data_task[:status].to_s
 
-        if task.blank?
-            return render json: { message: "Task not exist" }, status: :not_found
-        end
-
-        task.destroy
-        render json: { message: "Task is destroyed", task: task }, status: :ok
+    unless Task.valid_status?(status)
+      return render_message("api.errors.create_failed", status: :unprocessable_entity)
     end
+
+    task = Task.find_by(id: params[:id], project_id: params[:project_id])
+    if task.blank?
+      return render_message("api.errors.task_not_found", status: :not_found)
+    end
+
+    unless Task.check_status(task.status, status)
+      return render_message("api.errors.invalid_status", status: :unprocessable_entity)
+    end
+
+    if task.update(data_task.merge(status: status))
+      return render_message("api.messages.task_updated", status: :ok)
+    end
+
+    render_message("api.errors.update_failed", status: :unprocessable_entity)
+  end
+
+  def destroy
+    return unless ensure_project_access!
+
+    task = Task.find_by(id: params[:id], project_id: params[:project_id])
+    if task.blank?
+      return render_message("api.errors.task_not_found", status: :not_found)
+    end
+
+    task.destroy!
+    render_message("api.messages.task_destroyed", status: :ok, task: task)
+  end
+
+  private
+
+  def ensure_project_access!
+    user_id = current_user_id!
+    project = Project.find_by(id: params[:project_id], user_id: user_id)
+    return true if project.present?
+
+    render_message("api.errors.project_not_found", status: :not_found)
+    false
+  end
 end

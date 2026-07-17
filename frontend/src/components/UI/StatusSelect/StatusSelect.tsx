@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { getTaskStatusLabel } from "@/lib/types/models";
+import { getTaskStatusLabel, type TaskStatus } from "@/lib/types/models";
 import "@/styles/StatusSelect.css";
 
 type StatusSelectProps = {
-    value: number;
-    options: number[];
-    onChange: (value: number) => void;
+    value: TaskStatus;
+    options: TaskStatus[];
+    onChange: (value: TaskStatus) => void;
     disabled?: boolean;
     id?: string;
     "aria-label"?: string;
@@ -48,7 +48,7 @@ export default function StatusSelect({
         };
     }, [open]);
 
-    function selectOption(next: number) {
+    function selectOption(next: TaskStatus) {
         onChange(next);
         setOpen(false);
     }
