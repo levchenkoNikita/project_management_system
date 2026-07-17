@@ -2,7 +2,7 @@ import Link from "next/link";
 import { HOME_ROUTE, LOGIN_ROUTE } from "@/lib/utils/consts";
 import "@/styles/ErrorPage.css";
 
-export default function Unauthorized() {
+export default function UnauthorizedPage() {
     return (
         <section className="error-page">
             <div className="error-page__content">

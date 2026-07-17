@@ -118,6 +118,33 @@
         0 0 16px rgba(58, 230, 1, 0.12);
 }
 
+.auth-field__input--error {
+    border-color: rgba(255, 80, 80, 0.75);
+    border-bottom-width: 2px;
+    box-shadow: 0 2px 0 rgba(255, 80, 80, 0.55);
+}
+
+.auth-field__input--error:hover,
+.auth-field__input--error:focus {
+    border-color: rgba(255, 100, 100, 0.9);
+    box-shadow:
+        0 2px 0 rgba(255, 80, 80, 0.7),
+        0 0 0 3px rgba(255, 80, 80, 0.18);
+}
+
+.auth-form--status {
+    align-items: center;
+    text-align: center;
+}
+
+.auth-form__submit--link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
 .auth-form__submit {
     width: 100%;
     padding: 13px 16px;

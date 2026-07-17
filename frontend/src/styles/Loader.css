@@ -1,0 +1,30 @@
+.loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+}
+
+.loader__spinner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid var(--color-accent);
+    border-top-color: var(--color-accent2);
+    animation: loader-spin 0.75s linear infinite;
+    box-shadow: 0 0 18px rgba(58, 230, 1, 0.25);
+}
+
+.loader__label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.02em;
+}
+
+@keyframes loader-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
